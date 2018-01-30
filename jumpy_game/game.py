@@ -33,6 +33,9 @@ class Game:
         self.clock = pg.time.Clock()
         self.fps = fps
         
+        self.init_sprites()
+        
+    def init_sprites(self):
         self.all_sprites = pg.sprite.LayeredUpdates()
         
     def create_sprite_group(self):

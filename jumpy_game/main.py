@@ -35,6 +35,8 @@ class JumpyGame(Game):
 
         self.score = 0
         
+        self.init_sprites()
+        
         self.platforms = self.create_sprite_group()
         self.powerups = self.create_sprite_group()
         self.mobs = self.create_sprite_group()
