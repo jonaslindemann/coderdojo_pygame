@@ -20,7 +20,6 @@ class Player(GameSprite):
         
         self.pos = vec(40, HEIGHT - 100)
         self.vel = vec(0,0)
-        self.acc = vec(0,0)
 
     def load_images(self):
         self.image = self.game.spritesheet.get_image(614, 1063, 120, 191)
