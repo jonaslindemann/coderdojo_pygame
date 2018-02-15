@@ -194,4 +194,8 @@ Hur får vi gubben att stanna av sig själv?
         if keys[pg.K_RIGHT]:
             self.acc.x = 0.5
             
-        self.acc.x += self.vel.x * 0.01
+        self.acc.x -= self.vel.x * 0.12
+
+Prova att ändra värdena på acceleration och friktion
+
+Sätt in konstanter för acceleration och friktion.

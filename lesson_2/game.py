@@ -1,6 +1,7 @@
 import pygame as pg
 import random
 from os import path
+from settings import *
 vec = pg.math.Vector2
 
 class GameSprite(pg.sprite.Sprite):
@@ -14,30 +15,40 @@ class GameSprite(pg.sprite.Sprite):
         self.vel = vec(0,0)
         self.acc = vec(0,0)
         self.friction = vec(0,0)
-        
+        self.static = True
         
     def update(self):
+        
+        self.update_sprite()
+        
+        if not self.static:
 
-        # apply friction
+            # apply friction
 
-        self.acc.x += self.vel.x * self.friction.x
-        self.acc.y += self.vel.y * self.friction.y
+            self.acc.x += self.vel.x * self.friction.x
+            self.acc.y += self.vel.y * self.friction.y
 
-        # equations of motion
+            # equations of motion
 
-        self.vel += self.acc
-        if abs(self.vel.x) < 0.1:
-            self.vel.x = 0
-        self.pos += self.vel + 0.5 * self.acc
-
-        # wrap around the sides of the screen
-
-        if self.pos.x > WIDTH + self.rect.width / 2:
-            self.pos.x = 0 - self.rect.width / 2
-        if self.pos.x < 0 - self.rect.width / 2:
-            self.pos.x = WIDTH + self.rect.width / 2
+            self.vel += self.acc
+            if abs(self.vel.x) < 0.1:
+                self.vel.x = 0
+            self.pos += self.vel + 0.5 * self.acc
             
-        self.rect.midbottom = self.pos           
+            # wrap around the sides of the screen
+
+            if self.pos.x > WIDTH + self.rect.width / 2:
+                self.pos.x = 0 - self.rect.width / 2
+            if self.pos.x < 0 - self.rect.width / 2:
+                self.pos.x = WIDTH + self.rect.width / 2
+                
+            self.update_position()
+            
+    def update_sprite(self):
+        pass
+        
+    def update_position(self):
+        self.rect.midbottom = self.pos
     
     def animate(self):
         pass
@@ -66,6 +77,9 @@ class Game:
         self.clock = pg.time.Clock()
         self.fps = fps
         
+        self.init_sprites()
+        
+    def init_sprites(self):
         self.all_sprites = pg.sprite.LayeredUpdates()
         
     def create_sprite_group(self):
