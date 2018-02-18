@@ -48,8 +48,15 @@ class JumpyGame(Game):
         if self.player.vel.y > 0:
             hits = self.spritecollide(self.player, self.platforms, False)
             if hits:
-                lowest = max(hits, key = lambda x: x.rect.bottom)
-
+                
+                max_x = 0
+                lowest = None
+                
+                for sprite in hits:
+                    if sprite.rect.bottom > max_x:
+                        max_x = sprite.rect.bottom
+                        lowest = sprite
+                
                 if self.player.pos.x < lowest.rect.right + 10 and \
                     self.player.pos.x > lowest.rect.left - 10:
 
