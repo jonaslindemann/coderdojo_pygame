@@ -12,12 +12,19 @@ class JumpyGame(Game):
         self.running = True
 
         self.load_data()
+        
+        self.font_name = self.match_font(FONT_NAME)
+        
 
     def load_data(self):
 
         self.spritesheet = SpriteSheet(self.image_path(SPRITESHEET))
+        
+        self.jump_sound = self.load_sound("Jump33.wav")
 
     def new(self):
+        
+        self.score = 0
         
         self.init_sprites()
         
@@ -27,17 +34,24 @@ class JumpyGame(Game):
             Platform(self, plat[0], plat[1])
 
         self.player = Player(self)
+        
+        self.load_music("Happy Tune.ogg")
+        
         self.run()
         
     def run(self):
         
         self.playing = True
         
+        self.play_music()
+        
         while self.playing:
             self.clock.tick(FPS)
             self.events()
             self.update()
             self.draw()
+            
+        self.fadeout_music(500)
 
     def update(self):
 
@@ -64,7 +78,35 @@ class JumpyGame(Game):
                     if self.player.pos.y < lowest.rect.centery:
                         self.player.pos.y = lowest.rect.top
                         self.player.vel.y = 0
-        
+                        self.player.jumping = False
+                        
+        if self.player.rect.top <= HEIGHT / 4:
+            
+            self.player.pos.y += max(abs(self.player.vel.y), 2)
+           
+            for plat in self.platforms:
+                plat.rect.y += max(abs(self.player.vel.y), 2)
+                if plat.rect.top >= HEIGHT:
+                    plat.kill()
+                    self.score += 10
+                        
+                        
+        # Die! 
+        if self.player.rect.bottom > HEIGHT:
+            for sprite in self.all_sprites:
+                sprite.rect.y -= max(self.player.vel.y, 10)
+                if sprite.rect.bottom < 0:
+                    sprite.kill()
+
+        if len(self.platforms) == 0:
+            self.playing = False
+            
+        while len(self.platforms) < 6:
+            width = random.randrange(50, 100)
+            Platform(self, random.randrange(0, WIDTH - width),
+                         random.randrange(-75, -30))            
+            
+
 
     def events(self):
         for event in self.get_event():
@@ -72,10 +114,15 @@ class JumpyGame(Game):
                 if self.playing:
                     self.playing = False
                 self.running = False
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    self.player.jump()
+                
        
     def draw(self):
         self.screen.fill(BGCOLOR)
         self.draw_sprites()
+        self.draw_text(str(self.score), 22, WHITE, WIDTH/2, 15)        
         self.flip_display()
         
     def show_start_screen(self):

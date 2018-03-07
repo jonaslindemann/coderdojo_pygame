@@ -78,3 +78,63 @@ class Platform(GameSprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+...
+
+class JumpyGame(Game):
+
+    def new(self):
+
+        self.score = 0
+        
+        self.init_sprites()
+        
+        self.platforms = self.create_sprite_group()
+
+settings.py:
+
+PLATFORM_LIST = [(0, HEIGHT-60), 
+                 (WIDTH/2 - 50, HEIGHT * 3 /4),
+                 (125, HEIGHT-350),
+                 (350, 200),
+                 (175, 100)]
+
+        for plat in PLATFORM_LIST:
+            Platform(self, plat[0], plat[1])
+
+class JumpyGame(Game):
+
+    def new(self):
+
+        for plat in PLATFORM_LIST:
+            Platform(self, plat[0], plat[1])
+
+# Steg 8 Gravitation
+
+    def update_sprite(self):
+        keys = pg.key.get_pressed()
+        
+        self.acc.x = 0.0
+        self.acc.y = 0.8
+    
+        if keys[pg.K_LEFT]:
+            self.acc.x = -0.2
+        if keys[pg.K_RIGHT]:
+            self.acc.x = 0.2
+
+Vad händer??
+
+        if self.player.vel.y > 0:
+            hits = self.spritecollide(self.player, self.platforms, False)
+            if hits:
+                lowest = max(hits, key = lambda x: x.rect.bottom)
+
+                if self.player.pos.x < lowest.rect.right + 10 and \
+                    self.player.pos.x > lowest.rect.left - 10:
+
+                    if self.player.pos.y < lowest.rect.centery:
+                        self.player.pos.y = lowest.rect.top
+                        self.player.vel.y = 0
+
+
+
