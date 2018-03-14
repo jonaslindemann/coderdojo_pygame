@@ -1,38 +1,19 @@
-import pygame as pg
-from random import choice, randrange
-from settings import *
+# Animering
 
-from game import *
+https://board.net/p/CoderDojoSkurup
+
+Först måste vi ladda bilder som vi skall använda till animeringen:
 
 class Player(GameSprite):
-    def __init__(self, game):
-        GameSprite.__init__(self, game, [game.all_sprites], layer=PLAYER_LAYER)
-
-        self.walking = False
-        self.jumping = False
-        self.current_frame = 0
-        self.last_update = 0
-        self.load_images()
-
-        self.image = self.standing_frames[0]
-        self.image.set_colorkey(BLACK)
-        self.rect = self.image.get_rect()
-        self.rect.center = (40, HEIGHT - 100)
-
-        self.pos = vec(40, HEIGHT - 100)
-        self.acc = vec(0, PLAYER_GRAV)
-        self.friction = vec(PLAYER_FRICTION, 0)
-        self.static = False
-
     def load_images(self):
         self.standing_frames =[self.game.spritesheet.get_image(614, 1063, 120, 191),
-                               self.game.spritesheet.get_image(690, 406, 120, 201)]
+                            self.game.spritesheet.get_image(690, 406, 120, 201)]
 
         for frame in self.standing_frames:
             frame.set_colorkey(BLACK)
 
         self.walk_frames_r = [self.game.spritesheet.get_image(678, 860, 120, 201),
-                              self.game.spritesheet.get_image(692, 1458, 120, 207)]
+                            self.game.spritesheet.get_image(692, 1458, 120, 207)]
 
         for frame in self.walk_frames_r:
             frame.set_colorkey(BLACK)
@@ -48,45 +29,10 @@ class Player(GameSprite):
         self.jump_frame = self.game.spritesheet.get_image(382, 763, 150, 181)
         self.jump_frame.set_colorkey(BLACK)
 
-    def jump_cut(self):
-        if self.jumping:
-            if self.vel.y < -3:
-                self.vel.y = -3
-        
-    def jump(self):
-        
-        self.rect.y += 2
-        hits = pg.sprite.spritecollide(self, self.game.platforms, False)
-        self.rect.y -= 2
+## Animeringsfunktion
 
-        if hits and not self.jumping:
-            print("play sound")
-            self.game.jump_sound.play()
-            self.jumping = True
-            self.vel.y = -PLAYER_JUMP_VEL
+class Player(GameSprite):
 
-    def nothing_below(self):
-        self.rect.y += 2
-        hits = pg.sprite.spritecollide(self, self.game.platforms, False)
-        self.rect.y -= 2
-
-        return len(hits)==0
-
-    def update_sprite(self):
-        
-        self.animate()
-
-        self.acc = vec(0, PLAYER_GRAV)
-
-        keys = pg.key.get_pressed()
-        if keys[pg.K_LEFT]:
-            self.acc.x = -PLAYER_ACC
-        if keys[pg.K_RIGHT]:
-            self.acc.x = PLAYER_ACC
-            
-    def update_position(self):
-        self.rect.midbottom = self.pos           
-        
     def animate(self):
         now = pg.time.get_ticks()
         if self.vel.x != 0:
@@ -116,24 +62,19 @@ class Player(GameSprite):
                 self.rect.bottom = bottom
 
         self.mask = pg.mask.from_surface(self.image)
-               
-class Platform(GameSprite):
-    def __init__(self, game, x, y):
-        GameSprite.__init__(self, game, [game.all_sprites, game.platforms], PLATFORM_LAYER)
 
-        self.images = [self.game.spritesheet.get_image(0, 288, 380, 94),
-                       self.game.spritesheet.get_image(213, 1662, 201, 100)]
-        
-        self.image = choice(self.images)
-        self.image.set_colorkey(BLACK)
-
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        
-        if randrange(100) < POW_SPAWN_PCT:
-            Pow(self.game, self)
+För att få igång animeringen:
                     
+        def update_sprite(self):
+            
+            self.animate()
+
+# Powerups
+
+Först skall vi skapa en ny Sprite:
+
+## Ny sprite
+
 class Pow(GameSprite):
     def __init__(self, game, plat):
         GameSprite.__init__(self, game, [game.all_sprites, game.powerups], POW_LAYER)
@@ -154,6 +95,112 @@ class Pow(GameSprite):
 
         if not self.game.platforms.has(self.plat):
             self.kill()
+
+## Ny sprite-grupp:
+
+    def new(self):
+
+        self.score = 0
+        
+        self.init_sprites()
+        
+        self.platforms = self.create_sprite_group()
+        self.powerups = self.create_sprite_group()
+
+## Skapa powerups
+
+Powerups skall skapas på plattformarna, så vi behöver något som skapar dessa:
+
+Först behöver vi lite variabler i settings.py:
+
+# Game properties
+
+BOOST_POWER = 60
+POW_SPAWN_PCT = 20
+
+## Skapa powerup på plattform
+
+class Platform(GameSprite):
+    def __init__(self, game, x, y):
+
+        ...
+
+        if randrange(100) < POW_SPAWN_PCT:
+            Pow(self.game, self)
+
+Prova och kör...
+
+## Aktivera powerups
+
+main.py:
+
+    def update(self):
+
+        ...
+
+        # Powerup
+
+        pow_hits = self.spritecollide(self.player, self.powerups, True)
+        for pow in pow_hits:
+            if pow.type == 'boost':
+                self.player.vel.y = -BOOST_POWER
+                self.player.jumping = False
+
+## Ljud för power up
+
+Hur skall vi åstadkomma detta?
+
+main.py:
+
+    def load_data(self):
+
+        self.boost_sound = self.load_sound("Boost16.wav")
+
+Lägg in ljudet precis som vi gjorde för jump
+
+# Startup skärm
+
+main.py:
+
+    def show_start_screen(self):
+        self.load_music("Yippee.ogg")
+        self.play_music()
+
+        self.screen.fill(BGCOLOR)
+        self.draw_text(TITLE, 48, WHITE, WIDTH / 2, HEIGHT / 4)
+        self.draw_text("Arrows to move, space to jump", 22, WHITE, WIDTH / 2, HEIGHT / 2)
+        self.draw_text("Press a key to play", 22, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
+        
+        self.flip_display()
+        self.wait_for_key()
+        
+        self.fadeout_music(500)
+
+# Game over skärm
+
+    def show_go_screen(self):
+
+        if not self.running:
+            return
+
+        self.load_music("Yippee.ogg")
+        self.play_music()
+
+        self.screen.fill(BGCOLOR)
+        self.draw_text("GAME OVER", 48, WHITE, WIDTH / 2, HEIGHT / 4)
+        self.draw_text("Score: " + str(self.score), 22, WHITE, WIDTH / 2, HEIGHT / 2)
+        self.draw_text("Press a key to play again", 22, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
+            
+        self.flip_display()
+        self.wait_for_key()
+
+        self.fadeout_music(500)
+
+# Monster
+
+## Sprite
+
+sprites.py:
 
 class Mob(GameSprite):
     def __init__(self, game):
@@ -199,31 +246,60 @@ class Mob(GameSprite):
 
         if self.rect.left > WIDTH + 100 or self.rect.right < -100:
             self.kill()
-        
-class Cloud(GameSprite):
-    def __init__(self, game):
-        GameSprite.__init__(self, game, [game.all_sprites, game.clouds], CLOUD_LAYER)
 
-        self.image = choice(self.game.cloud_images)
-        self.image.set_colorkey(BLACK)
-        self.rect = self.image.get_rect()
-        scale = randrange(50,101) / 100
-        pg.transform.scale(self.image, (int(self.rect.width * scale), int(self.rect.height * scale)))
-        self.rect.x = randrange(WIDTH - self.rect.width)
-        self.rect.y = randrange(-500, -50)
-        self.vx = choice([-2,-1, 1, 2])
+## Sprite grupp
+
+main.py:
+
+    def new(self):
+
+        self.score = 0
+        
+        self.init_sprites()
+        
+        self.platforms = self.create_sprite_group()
+        self.powerups = self.create_sprite_group()
+        self.mobs = self.create_sprite_group()
+        self.mob_timer = 0
+        
+
+## Inställnings variabel
+
+settings.py
+
+# Game properties
+
+BOOST_POWER = 60
+POW_SPAWN_PCT = 20
+MOB_FREQ = 5000
+
+
+## Skapa monster
+
+main.py
 
     def update(self):
+
+        # Spawn a mob
+
+        now = self.get_ticks()
         
-        self.rect.x += self.vx
+        if now - self.mob_timer > MOB_FREQ + random.choice([-1000, -500, 0, 500, 1000]):
+            self.mob_timer = now
+            Mob(self)
 
-        # wrap around the sides of the screen
+Funkar det? Vi måste också kontrollera om den träffar oss:
 
-        if self.rect.left >= WIDTH:
-            self.rect.right = 0 
-        elif self.rect.right <= 0:
-            self.rect.left = WIDTH
+    def update(self):
 
-        if self.rect.top > HEIGHT * 2:
-            self.kill()
-        
+        # hit mobs
+
+        mob_hits = self.spritecollide(self.player, self.mobs, False, pg.sprite.collide_mask)
+        if mob_hits:
+            self.playing = False
+
+Ljud till monster?
+
+
+
+
